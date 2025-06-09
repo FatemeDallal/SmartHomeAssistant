@@ -5,64 +5,15 @@ from home import *
 import re
 from rapidfuzz import process
 
-KEYWORDS = {
-    "turn_on": [
-        "turn on", "switch on", "power on", "activate", "start", "enable", "turn the .* on"
-    ],
-    "turn_off": [
-        "turn off", "switch off", "off", "deactivate", "stop", "disable", "turn the .* off"
-    ],
-    "set_color": [
-        "set color", "change color", "make it", "color to", "light color", "turn .* to .* color"
-    ],
-    "set_brightness": [
-        "set brightness", "adjust brightness", "brightness to", "make it brighter", "make it dimmer",
-        "increase brightness", "decrease brightness", "lower brightness", "raise brightness"
-    ],
-    "set_temperature": [
-        "set temperature", "adjust temperature", "temperature to", "cool to", "heat to", "change temperature",
-        "increase temperature", "decrease temperature"
-    ],
-    "set_channel": [
-        "set channel", "change channel", "channel to", "switch to channel", "on channel", "go to channel"
-    ],
+import json
+import os
 
-    "lights": [
-        "light", "lights", "lamp", "bulb", "ceiling light", "led"
-    ],
-    "cooling": [
-        "cooling", "ac", "air conditioner", "air conditioning", "cooler"
-    ],
-    "heating": [
-        "heating", "heater", "radiator", "warmer", "boiler"
-    ],
-    "tv": [
-        "tv", "television", "smart tv", "screen", "the tv", "flat screen"
-    ],
+KEYWORDS_PATH = os.path.join(os.path.dirname(__file__), "keywords.json")
 
-    "kitchen": ["kitchen"],
-    "room1": ["room 1", "first room", "bedroom 1", "main bedroom"],
-    "room2": ["room 2", "second room", "bedroom 2", "guest room"],
-    "bathroom": ["bathroom", "restroom", "washroom", "toilet", "wc"],
-    "living_room": ["living room", "hall", "main room", "lounge", "salon"],
+with open(KEYWORDS_PATH, "r", encoding="utf-8") as f:
+    KEYWORDS = json.load(f)
 
-    "get_time": [
-        "what time", "current time", "tell me the time", "time is it", "what is the time", "do you know the time"
-    ],
-    "get_date": [
-        "what date", "today's date", "current date", "tell me the date", "date is it", "which day is it"
-    ],
-    "get_weather": [
-        "weather", "what's the weather", "how is the weather", "weather like", "forecast", "temperature outside"
-    ],
-    "get_news": [
-        "news", "latest news", "what's in the news", "tell me the news", "headlines", "update me"
-    ],
-    "get_device_status": [
-        "device status", "what is running", "what is on", "status of devices", "check devices", "check status",
-        "is the .* on"
-    ]
-}
+places = ["kitchen", "bathroom", "room1", "room2", "living_room", "WC"]
 
 
 def map_keywords(text):
@@ -80,6 +31,21 @@ def is_color(word):
     return False
 
 
+def extract_number_and_unit(text):
+    patterns = [
+        r'\bto\s+(\d+)\s*(percent|degrees|%)?',
+        r'\bby\s+(\d+)\s*(percent|degrees|%)?',
+        r'\b(\d+)\s*(percent|degrees|%)?',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            number = int(match.group(1))
+            unit = match.group(2) if match.group(2) else None
+            return number, unit
+    return None, None
+
+
 def parse_command(correct_input):
     commands = re.split(r"\s+و\s+| and ", correct_input)
     instructions = list()
@@ -87,28 +53,35 @@ def parse_command(correct_input):
         device, location, action, value = None, None, None, None
         command = command.lower()
         mapped = map_keywords(command)
+        number, unit = extract_number_and_unit(command)
+
+        if unit is None and "brightness" in command:
+            unit = "%"
+        elif unit is None and "temperature" in command:
+            unit = "degrees"
 
         if "lights" in mapped:
             device = "lights"
-        elif "cooling" in mapped:
+        elif "set_temperature_cool" in mapped:
             device = "cooling"
-        elif "heating" in mapped:
+        elif "set_temperature_heat" in mapped:
             device = "heating"
         elif "tv" in mapped or "set_channel" in mapped:
             device = "tv"
-            location = "living_room"
-        elif "time" in mapped:
-            pass
-        elif "date" in mapped:
-            pass
-        elif "weather" in mapped:
-            pass
-        elif "news" in mapped:
-            pass
-        elif "status" in mapped:
-            pass
+            if not location:
+                location = "living_room"
+        elif "get_time" in mapped:
+            action = "get_time"
+        elif "get_date" in mapped:
+            action = "get_date"
+        elif "get_weather" in mapped:
+            action = "get_weather"
+        elif "get_news" in mapped:
+            action = "get_news"
+        elif "get_status" in mapped:
+            action = "get_status"
 
-        for place in ["kitchen", "bathroom", "room1", "room2", "living_room", "WC"]:
+        for place in places:
             if place in mapped:
                 location = place.replace(" ", "_")
                 break
@@ -124,30 +97,23 @@ def parse_command(correct_input):
                 if is_color(word):
                     value = word
                     break
-        elif "set_brightness" in mapped:
-            action = "set_brightness_light"
-            words = command.split()
-            for word in words:
-                if word.isdigit():
-                    value = int(word)
-                    break
-        elif "set_cooling" in mapped:
+        elif "set_brightness_light" in mapped or (unit and unit.lower() in ["percent", "%"]):
+            value = number
+        elif "set_temperature" in mapped or (unit and unit.lower() == "degrees"):
+            if "cool" in command:
+                action = "set_temperature_cool"
+            elif "heat" in command:
+                action = "set_temperature_heat"
+            value = number
+        elif "set_cooling" in mapped or (unit and unit.lower() == "degrees"):
             action = "set_temperature_cool"
-            words = command.split()
-            for word in words:
-                if word.isdigit():
-                    value = int(word)
-                    break
+            value = number
         elif "set_heating" in mapped:
             action = "set_temperature_heat"
-            words = command.split()
-            for word in words:
-                if word.isdigit():
-                    value = int(word)
-                    break
+            value = number
         elif "set_channel" in mapped:
             action = "set_channel_tv"
-            value = command.split()[-1]
+            value = number
 
         instructions.append({"device": device, "location": location, "action": action, "value": value})
 
@@ -155,47 +121,51 @@ def parse_command(correct_input):
 
 
 def execute_command(instructions):
+    responses = []
     for instruction in instructions:
         try:
             if instruction["action"] == "turn_on" and instruction["device"] is not None:
-                return turn_on(instruction["device"], instruction["location"])
+                responses.append(turn_on(instruction["device"], instruction["location"]))
 
             elif instruction["action"] == "turn_off" and instruction["device"] is not None:
-                return turn_off(instruction["device"], instruction["location"])
+                responses.append(turn_off(instruction["device"], instruction["location"]))
 
             elif instruction["action"] == "set_color_light" and instruction["device"] is not None:
-                return set_color_light(instruction["device"], instruction["location"], instruction["value"])
+                responses.append(set_color_light(instruction["device"], instruction["location"]))
 
             elif instruction["action"] == "set_brightness_light" and instruction["device"] is not None:
-                return set_brightness_light(instruction["device"], instruction["location"], instruction["value"])
+                responses.append(set_brightness_light(instruction["device"], instruction["location"]))
 
             elif instruction["action"] == "set_temperature_cool" and instruction["device"] is not None:
-                return set_temperature_cool(instruction["device"], instruction["location"], instruction["value"])
+                responses.append(set_temperature_cool(instruction["device"], instruction["location"]))
 
             elif instruction["action"] == "set_temperature_heat" and instruction["device"] is not None:
-                return set_temperature_heat(instruction["device"], instruction["location"], instruction["value"])
+                responses.append(set_temperature_heat(instruction["device"], instruction["location"]))
 
             elif instruction["action"] == "set_channel_tv" and instruction["device"] is not None:
-                return set_channel_tv(instruction["device"], instruction["location"], instruction["value"])
+                responses.append(set_channel_tv(instruction["device"], instruction["location"]))
 
-            elif instruction["action"] == "get_time" and instruction["device"] is not None:
-                pass
+            elif instruction["action"] == "get_time":
+                responses.append(get_time())
 
-            elif instruction["action"] == "get_date" and instruction["device"] is not None:
-                pass
+            elif instruction["action"] == "get_date":
+                responses.append(get_date())
 
-            elif instruction["action"] == "get_news" and instruction["device"] is not None:
-                pass
+            elif instruction["action"] == "get_news":
+                responses.append(get_news())
 
-            elif instruction["action"] == "get_status" and instruction["device"] is not None:
-                pass
+            elif instruction["action"] == "get_status":
+                responses.append(get_status())
 
-            elif instruction["action"] == "get_weather" and instruction["device"] is not None:
-                pass
+            elif instruction["action"] == "get_weather":
+                responses.append(get_weather())
 
-            return "Unknown command."
+            else:
+                responses.append("Unknown command.")
         except Exception as e:
             return f"Error while executing command: {e}"
+
+    return responses
 
 
 def correct_spelling(sentences):
@@ -216,11 +186,20 @@ def correct_spelling(sentences):
     return " and ".join(corrected_sentences)
 
 
+def get_output(instructions):
+    output_lines = []
+    for instruction in instructions:
+        output_lines.append(instruction["value"])
+
+    return "\n".join(output_lines)
+
+
 def smart_home_agent(user_input):
     correct_input = correct_spelling(user_input)
     instructions = parse_command(correct_input)
 
-    return execute_command(instructions)
+    output = get_output(execute_command(instructions))
+    return output
 
 
 while True:

@@ -1,0 +1,76 @@
+{
+    "lights": {
+        "kitchen": {
+            "on": false,
+            "color": "white",
+            "brightness": 100
+        },
+        "living room": {
+            "on": false,
+            "color": "white",
+            "brightness": 100
+        },
+        "bathroom": {
+            "on": false,
+            "color": "white",
+            "brightness": 100
+        },
+        "WC": {
+            "on": false,
+            "color": "white",
+            "brightness": 100
+        },
+        "room1": {
+            "on": false,
+            "color": "white",
+            "brightness": 100
+        },
+        "room2": {
+            "on": false,
+            "color": "white",
+            "brightness": 100
+        }
+    },
+    "cooling": {
+        "kitchen": {
+            "on": false,
+            "temperature": 24
+        },
+        "living_room": {
+            "on": false,
+            "temperature": 24
+        },
+        "room1": {
+            "on": false,
+            "temperature": 24
+        },
+        "room2": {
+            "on": false,
+            "temperature": 24
+        }
+    },
+    "heating": {
+        "kitchen": {
+            "on": false,
+            "temperature": 24
+        },
+        "living_room": {
+            "on": false,
+            "temperature": 24
+        },
+        "room_1": {
+            "on": false,
+            "temperature": 24
+        },
+        "room_2": {
+            "on": false,
+            "temperature": 24
+        }
+    },
+    "tv": {
+        "living_room": {
+            "on": false,
+            "channel": 1
+        }
+    }
+}
