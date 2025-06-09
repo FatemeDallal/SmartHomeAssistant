@@ -23,7 +23,7 @@ def default_state():
     return {
         "lights": {
             "kitchen": {"on": False, "color": "white", "brightness": 100},
-            "living room": {"on": False, "color": "white", "brightness": 100},
+            "living_room": {"on": False, "color": "white", "brightness": 100},
             "bathroom": {"on": False, "color": "white", "brightness": 100},
             "WC": {"on": False, "color": "white", "brightness": 100},
             "room1": {"on": False, "color": "white", "brightness": 100},
@@ -38,8 +38,8 @@ def default_state():
         "heating": {
             "kitchen": {"on": False, "temperature": 24},
             "living_room": {"on": False, "temperature": 24},
-            "room_1": {"on": False, "temperature": 24},
-            "room_2": {"on": False, "temperature": 24},
+            "room1": {"on": False, "temperature": 24},
+            "room2": {"on": False, "temperature": 24},
         },
         "tv": {
             "living_room": {"on": False, "channel": 1},
@@ -71,7 +71,7 @@ def set_color_light(device, location, color):
         if state[device][location]["on"]:
             state[device][location]["color"] = color
             save_state(state)
-            return f"{device} in {location} turned ON and color changed."
+            return f"{device} in {location} set to color {color}"
         return f"{device} in {location} turned OFF."
     return "Invalid device or location."
 
@@ -82,42 +82,35 @@ def set_brightness_light(device, location, brightness):
         if state[device][location]["on"]:
             state[device][location]["brightness"] = brightness
             save_state(state)
-            return f"{device} in {location} turned ON and brightness changed."
+            return f"{device} in {location} set to {brightness}% brightness"
         return f"{device} in {location} turned OFF."
     return "Invalid device or location."
 
 
-def set_temperature_cool(device, location, temperature):
-    state = load_state()
-    if device in state and location in state[device]:
-        if state[device][location]["on"]:
-            state[device][location]["temperature"] = temperature
-            save_state(state)
-            return f"{device} in {location} turned ON and temperature changed."
-        return f"{device} in {location} turned OFF."
-    return "Invalid device or location."
-
-
-def set_temperature_heat(device, location, temperature):
-    state = load_state()
-    if device in state and location in state[device]:
-        if state[device][location]["on"]:
-            state[device][location]["temperature"] = temperature
-            save_state(state)
-            return f"{device} in {location} turned ON and temperature changed."
-        return f"{device} in {location} turned OFF."
-    return "Invalid device or location."
+def set_temperature(device_type, location, temperature):
+    if 0 <= temperature <= 100:
+        state = load_state()
+        if device_type in state and location in state[device_type]:
+            if state[device_type][location]["on"]:
+                state[device_type][location]["temperature"] = temperature
+                save_state(state)
+                return f"{device_type} in {location} turned ON and temperature changed."
+            return f"{device_type} in {location} turned OFF."
+        return "Invalid device or location."
+    return "Invalid temperature."
 
 
 def set_channel_tv(device, location, channel):
-    state = load_state()
-    if device in state and location in state[device]:
-        if state[device][location]["on"]:
-            state[device][location]["channel"] = channel
-            save_state(state)
-            return f"{device} in {location} turned ON and channel changed."
-        return f"{device} in {location} turned OFF."
-    return "Invalid device or location."
+    if 1 <= channel <= 9:
+        state = load_state()
+        if device in state and location in state[device]:
+            if state[device][location]["on"]:
+                state[device][location]["channel"] = channel
+                save_state(state)
+                return f"{device} in {location} turned ON and channel changed."
+            return f"{device} in {location} turned OFF."
+        return "Invalid device or location."
+    return "Invalid channel number."
 
 
 def get_status():

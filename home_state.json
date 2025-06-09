@@ -5,7 +5,7 @@
             "color": "white",
             "brightness": 100
         },
-        "living room": {
+        "living_room": {
             "on": false,
             "color": "white",
             "brightness": 100
@@ -58,11 +58,11 @@
             "on": false,
             "temperature": 24
         },
-        "room_1": {
+        "room1": {
             "on": false,
             "temperature": 24
         },
-        "room_2": {
+        "room2": {
             "on": false,
             "temperature": 24
         }

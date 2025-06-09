@@ -124,46 +124,49 @@ def execute_command(instructions):
     responses = []
     for instruction in instructions:
         try:
-            if instruction["action"] == "turn_on" and instruction["device"] is not None:
-                responses.append(turn_on(instruction["device"], instruction["location"]))
+            device = instruction["device"]
+            location = instruction["location"]
+            action = instruction["action"]
+            value = instruction["value"]
 
-            elif instruction["action"] == "turn_off" and instruction["device"] is not None:
-                responses.append(turn_off(instruction["device"], instruction["location"]))
+            if action == "turn_on" and device is not None:
+                responses.append(turn_on(device, location))
 
-            elif instruction["action"] == "set_color_light" and instruction["device"] is not None:
-                responses.append(set_color_light(instruction["device"], instruction["location"]))
+            elif action == "turn_off" and device is not None:
+                responses.append(turn_off(device, location))
 
-            elif instruction["action"] == "set_brightness_light" and instruction["device"] is not None:
-                responses.append(set_brightness_light(instruction["device"], instruction["location"]))
+            elif action == "set_color_light" and device is not None and value:
+                responses.append(set_color_light(device, location, value))
 
-            elif instruction["action"] == "set_temperature_cool" and instruction["device"] is not None:
-                responses.append(set_temperature_cool(instruction["device"], instruction["location"]))
+            elif action == "set_brightness_light" and device is not None and value is not None:
+                responses.append(set_brightness_light(device, location, value))
 
-            elif instruction["action"] == "set_temperature_heat" and instruction["device"] is not None:
-                responses.append(set_temperature_heat(instruction["device"], instruction["location"]))
+            elif action == "set_temperature_cool" and device is not None and value is not None:
+                responses.append(set_temperature(device, location, value))
 
-            elif instruction["action"] == "set_channel_tv" and instruction["device"] is not None:
-                responses.append(set_channel_tv(instruction["device"], instruction["location"]))
+            elif action == "set_channel_tv" and device is not None and value is not None:
+                responses.append(set_channel_tv(device, location, value))
 
-            elif instruction["action"] == "get_time":
+            elif action == "get_time":
                 responses.append(get_time())
 
-            elif instruction["action"] == "get_date":
+            elif action == "get_date":
                 responses.append(get_date())
 
-            elif instruction["action"] == "get_news":
+            elif action == "get_news":
                 responses.append(get_news())
 
-            elif instruction["action"] == "get_status":
+            elif action == "get_status":
                 responses.append(get_status())
 
-            elif instruction["action"] == "get_weather":
+            elif action == "get_weather":
                 responses.append(get_weather())
 
             else:
                 responses.append("Unknown command.")
+
         except Exception as e:
-            return f"Error while executing command: {e}"
+            responses.append(f"Error while executing command: {e}")
 
     return responses
 
@@ -186,20 +189,15 @@ def correct_spelling(sentences):
     return " and ".join(corrected_sentences)
 
 
-def get_output(instructions):
-    output_lines = []
-    for instruction in instructions:
-        output_lines.append(instruction["value"])
-
-    return "\n".join(output_lines)
+def get_output(responses):
+    return "\n".join(responses)
 
 
 def smart_home_agent(user_input):
     correct_input = correct_spelling(user_input)
     instructions = parse_command(correct_input)
-
-    output = get_output(execute_command(instructions))
-    return output
+    responses = execute_command(instructions)
+    return get_output(responses)
 
 
 while True:
