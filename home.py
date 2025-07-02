@@ -29,17 +29,11 @@ def default_state():
             "room1": {"on": False, "color": "white", "brightness": 100},
             "room2": {"on": False, "color": "white", "brightness": 100},
         },
-        "cooling": {
-            "kitchen": {"on": False, "temperature": 24},
-            "living_room": {"on": False, "temperature": 24},
-            "room1": {"on": False, "temperature": 24},
-            "room2": {"on": False, "temperature": 24},
-        },
-        "heating": {
-            "kitchen": {"on": False, "temperature": 24},
-            "living_room": {"on": False, "temperature": 24},
-            "room1": {"on": False, "temperature": 24},
-            "room2": {"on": False, "temperature": 24},
+        "temperature": {
+            "kitchen": {"on": False, "value": 24},
+            "living_room": {"on": False, "value": 24},
+            "room1": {"on": False, "value": 24},
+            "room2": {"on": False, "value": 24},
         },
         "tv": {
             "living_room": {"on": False, "channel": 1},
@@ -76,39 +70,36 @@ def set_color_light(device, location, color):
     return "Invalid device or location."
 
 
+def set_temperature(location, temperature):
+    if 0 <= temperature <= 100:
+        state = load_state()
+        if location in state["temperature"]:
+            state["temperature"][location]["on"] = True
+            state["temperature"][location]["value"] = temperature
+            save_state(state)
+            return f"Temperature in {location} set to {temperature}°C and system turned ON."
+        return "Invalid location for temperature control."
+    return "Invalid temperature value."
+
+
 def set_brightness_light(device, location, brightness):
     state = load_state()
     if device in state and location in state[device]:
-        if state[device][location]["on"]:
-            state[device][location]["brightness"] = brightness
-            save_state(state)
-            return f"{device} in {location} set to {brightness}% brightness"
-        return f"{device} in {location} turned OFF."
+        state[device][location]["on"] = True
+        state[device][location]["brightness"] = brightness
+        save_state(state)
+        return f"{device} in {location} set to {brightness}% brightness and turned ON."
     return "Invalid device or location."
-
-
-def set_temperature(device_type, location, temperature):
-    if 0 <= temperature <= 100:
-        state = load_state()
-        if device_type in state and location in state[device_type]:
-            if state[device_type][location]["on"]:
-                state[device_type][location]["temperature"] = temperature
-                save_state(state)
-                return f"{device_type} in {location} turned ON and temperature changed."
-            return f"{device_type} in {location} turned OFF."
-        return "Invalid device or location."
-    return "Invalid temperature."
 
 
 def set_channel_tv(device, location, channel):
     if 1 <= channel <= 9:
         state = load_state()
         if device in state and location in state[device]:
-            if state[device][location]["on"]:
-                state[device][location]["channel"] = channel
-                save_state(state)
-                return f"{device} in {location} turned ON and channel changed."
-            return f"{device} in {location} turned OFF."
+            state[device][location]["on"] = True
+            state[device][location]["channel"] = channel
+            save_state(state)
+            return f"{device} in {location} changed to channel {channel} and turned ON."
         return "Invalid device or location."
     return "Invalid channel number."
 
@@ -122,14 +113,9 @@ def get_status():
         line = f"  - {room.capitalize()}: {'ON' if s['on'] else 'OFF'}, Color: {s['color']}, Brightness: {s['brightness']}%"
         status_lines.append(line)
 
-    status_lines.append("\nCooling Systems:")
-    for room, s in state["cooling"].items():
-        line = f"  - {room.replace('_', ' ').capitalize()}: {'ON' if s['on'] else 'OFF'}, Temperature: {s['temperature']}°C"
-        status_lines.append(line)
-
-    status_lines.append("\nHeating Systems:")
-    for room, s in state["heating"].items():
-        line = f"  - {room.replace('_', ' ').capitalize()}: {'ON' if s['on'] else 'OFF'}, Temperature: {s['temperature']}°C"
+    status_lines.append("\nTemperature Systems:")
+    for room, s in state["temperature"].items():
+        line = f"  - {room.replace('_', ' ').capitalize()}: {'ON' if s['on'] else 'OFF'}, Temperature: {s['value']}°C"
         status_lines.append(line)
 
     status_lines.append("\nTVs:")
