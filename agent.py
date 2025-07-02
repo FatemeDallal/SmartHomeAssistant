@@ -58,7 +58,7 @@ def parse_command(correct_input):
     commands = re.split(r"\s+و\s+| and ", correct_input)
     instructions = list()
     for command in commands:
-        device, location, action, value = None, None, None, None
+        device, location, action, value = None, "living_room", None, None
         command = command.lower()
         mapped = map_keywords(command)
         number, unit = extract_number_and_unit(command)
@@ -70,7 +70,7 @@ def parse_command(correct_input):
 
         if "lights" in mapped:
             device = "lights"
-        elif any(k in mapped for k in ["set_temperature", "heating", "cooling"]):
+        elif "set_temperature" in mapped:
             device = "temperature"
         elif "tv" in mapped or "set_channel" in mapped:
             device = "tv"
@@ -106,6 +106,8 @@ def parse_command(correct_input):
         elif "set_brightness_light" in mapped or (unit and unit.lower() in ["percent", "%"]):
             action = "set_brightness_light"
             value = number
+            if device is None:
+                device = "lights"
         elif "set_temperature" in mapped or (unit and unit.lower() == "degrees"):
             action = "set_temperature"
             value = number
