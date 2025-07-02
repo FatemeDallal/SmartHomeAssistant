@@ -7,7 +7,7 @@
         },
         "living_room": {
             "on": false,
-            "color": "white",
+            "color": "blue",
             "brightness": 100
         },
         "bathroom": {
@@ -21,9 +21,9 @@
             "brightness": 100
         },
         "room1": {
-            "on": false,
+            "on": true,
             "color": "white",
-            "brightness": 100
+            "brightness": 60
         },
         "room2": {
             "on": false,
@@ -45,14 +45,14 @@
             "value": 1
         },
         "room2": {
-            "on": false,
+            "on": true,
             "value": 24
         }
     },
     "tv": {
         "living_room": {
             "on": true,
-            "channel": 5
+            "channel": 4
         }
     }
 }
