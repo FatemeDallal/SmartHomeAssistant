@@ -8,6 +8,14 @@ from rapidfuzz import process
 import json
 import os
 
+import whisper
+import pyaudio
+import wave
+import tempfile
+import os
+
+model = whisper.load_model("base")
+
 KEYWORDS_PATH = os.path.join(os.path.dirname(__file__), "keywords.json")
 
 with open(KEYWORDS_PATH, "r", encoding="utf-8") as f:
@@ -62,10 +70,8 @@ def parse_command(correct_input):
 
         if "lights" in mapped:
             device = "lights"
-        elif "set_temperature_cool" in mapped:
-            device = "cooling"
-        elif "set_temperature_heat" in mapped:
-            device = "heating"
+        elif any(k in mapped for k in ["set_temperature", "heating", "cooling"]):
+            device = "temperature"
         elif "tv" in mapped or "set_channel" in mapped:
             device = "tv"
             if not location:
@@ -98,18 +104,10 @@ def parse_command(correct_input):
                     value = word
                     break
         elif "set_brightness_light" in mapped or (unit and unit.lower() in ["percent", "%"]):
+            action = "set_brightness_light"
             value = number
         elif "set_temperature" in mapped or (unit and unit.lower() == "degrees"):
-            if "cool" in command:
-                action = "set_temperature_cool"
-            elif "heat" in command:
-                action = "set_temperature_heat"
-            value = number
-        elif "set_cooling" in mapped or (unit and unit.lower() == "degrees"):
-            action = "set_temperature_cool"
-            value = number
-        elif "set_heating" in mapped:
-            action = "set_temperature_heat"
+            action = "set_temperature"
             value = number
         elif "set_channel" in mapped:
             action = "set_channel_tv"
@@ -136,16 +134,16 @@ def execute_command(instructions):
                 responses.append(turn_off(device, location))
 
             elif action == "set_color_light" and device is not None and value:
-                responses.append(set_color_light(device, location, value))
+                responses.append(str(turn_on(device, location) + " and " + set_color_light(device, location, value)))
 
             elif action == "set_brightness_light" and device is not None and value is not None:
-                responses.append(set_brightness_light(device, location, value))
+                responses.append(str(turn_on(device, location) + " and " + set_brightness_light(device, location, value)))
 
-            elif action == "set_temperature_cool" and device is not None and value is not None:
-                responses.append(set_temperature(device, location, value))
+            elif action == "set_temperature" and device == "temperature" and value is not None:
+                responses.append(str(turn_on(device, location) + " and " + set_temperature(location, value)))
 
             elif action == "set_channel_tv" and device is not None and value is not None:
-                responses.append(set_channel_tv(device, location, value))
+                responses.append(str(turn_on(device, location) + " and " + set_channel_tv(device, location, value)))
 
             elif action == "get_time":
                 responses.append(get_time())
@@ -171,6 +169,7 @@ def execute_command(instructions):
     return responses
 
 
+
 def correct_spelling(sentences):
     all_keywords = set(word for words in KEYWORDS.values() for word in words)
     split_parts = re.split(r"\s+and\s+|\s+و\s+", sentences)
@@ -194,14 +193,16 @@ def get_output(responses):
 
 
 def smart_home_agent(user_input):
-    correct_input = correct_spelling(user_input)
-    instructions = parse_command(correct_input)
+    # correct_input = correct_spelling(user_input)
+    instructions = parse_command(user_input)
     responses = execute_command(instructions)
     return get_output(responses)
 
 
-while True:
-    inp = input("Enter command: ")
-    response = smart_home_agent(inp)
+if __name__ == '__main__':
+    while True:
+        inp = input("Enter command: ")
+        response = smart_home_agent(inp)
 
-    print(response)
+        print(response)
+
