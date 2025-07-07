@@ -12,9 +12,3 @@ def correct_spelling_and_grammar(text):
         outputs = model.generate(**inputs, max_length=128, num_beams=5, early_stopping=True)
     corrected_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return corrected_text
-
-
-input_text = "tun on the lghts i te kichen"
-corrected = correct_spelling_and_grammar(input_text)
-print("🔸 Input:", input_text)
-print("✅ Final Correction:", corrected)
