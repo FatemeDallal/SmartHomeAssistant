@@ -1,14 +1,13 @@
 from collections import defaultdict
 import matplotlib.colors as m_colors
-from correct_spelling import correct_spelling_and_grammar
 from home import *
 import re
 import json
-import whisper
 import os
 
-
-model = whisper.load_model("base")
+from correct_spelling import correct_spelling_and_grammar
+from speak_to_text import record_and_transcribe_long
+from text_to_speak import text_to_speech
 
 KEYWORDS_PATH = os.path.join(os.path.dirname(__file__), "keywords.json")
 
@@ -177,12 +176,18 @@ def smart_home_agent(user_input):
 
 
 if __name__ == '__main__':
-    # while True:
-    #     inp = input("Enter command: ")
-    #     response = smart_home_agent(inp)
-    #
-    #     print(response)
+    while True:
+        choice = input("Enter Type Input (1.Text or 2.Voice)")
+        if choice == "1":
+            query = input("Enter command: ")
+            response = smart_home_agent(query)
+            print(response)
+        elif choice == "2":
+            query = record_and_transcribe_long()
+            response = smart_home_agent(query)
+            text_to_speech()
 
-     pass
+
+
 
 
