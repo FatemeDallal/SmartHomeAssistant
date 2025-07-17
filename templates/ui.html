@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Home Assistant</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: #fff8c2;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: #3498db;
+      padding: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    header button {
+      background-color: white;
+      color: #3498db;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    header button:hover {
+      background-color: #ecf3fa;
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .chat-box {
+      width: 100%;
+      max-width: 600px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .chat-box input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .chat-buttons {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .chat-buttons button {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 15px;
+      border-radius: 5px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .chat-buttons button:hover {
+      background-color: #2980b9;
+    }
+
+    #result {
+      margin-top: 1rem;
+      font-size: 16px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 300px;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #3498db;
+    }
+
+    .modal-content select,
+    .modal-content input[type="range"],
+    .modal-content input[type="number"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    .modal-content button {
+      width: 48%;
+      margin: 1%;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 500px) {
+      .chat-buttons {
+        flex-direction: column;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      header button {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button onclick="openModal('lights')">Lights</button>
+    <button onclick="openModal('temperature')">Temperature</button>
+    <button onclick="openModal('tv')">TV</button>
+    <button onclick="sendSimpleCommand('get time')">Time</button>
+    <button onclick="sendSimpleCommand('get date')">Date</button>
+    <button onclick="sendSimpleCommand('get weather')">Weather</button>
+    <button onclick="sendSimpleCommand('get news')">News</button>
+    <button onclick="sendSimpleCommand('get status')">Status</button>
+  </header>
+
+  <main>
+    <div class="chat-box">
+      <input type="text" id="command" placeholder="Type your command...">
+      <div class="chat-buttons">
+        <button onclick="sendData()">Send</button>
+        <button onclick="startRecording()">Start Recording</button>
+        <button onclick="stopRecording()">Stop & Send</button>
+      </div>
+      <p id="result"></p>
+      <audio id="audioPlayer" controls></audio>
+    </div>
+  </main>
+
+  <!-- Lights Modal -->
+  <div id="lightsModal" class="modal">
+    <div class="modal-content">
+      <h2>Lights Settings</h2>
+      <label>Room:</label>
+      <select id="lightRoom">
+        <option value="kitchen">Kitchen</option>
+        <option value="bathroom">Bathroom</option>
+        <option value="room1">Room 1</option>
+        <option value="room2">Room 2</option>
+        <option value="living_room">Living Room</option>
+        <option value="WC">WC</option>
+      </select>
+
+      <label>State:</label>
+      <select id="lightState">
+        <option value="turn on">Turn On</option>
+        <option value="turn off">Turn Off</option>
+      </select>
+
+      <label>Brightness:</label>
+      <input type="range" min="0" max="100" value="50" id="lightBrightness" />
+      <span id="lightBrightnessValue">50%</span>
+
+      <label>Color:</label>
+      <select id="lightColor">
+        <option value="">No Change</option>
+        <option value="red">Red</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+        <option value="yellow">Yellow</option>
+      </select>
+
+      <button onclick="sendLights()">OK</button>
+      <button onclick="closeModal('lights')">Close</button>
+    </div>
+  </div>
+
+  <!-- Temperature Modal -->
+  <div id="temperatureModal" class="modal">
+    <div class="modal-content">
+      <h2>Temperature Settings</h2>
+      <label>Room:</label>
+      <select id="tempRoom">
+        <option value="kitchen">Kitchen</option>
+        <option value="bathroom">Bathroom</option>
+        <option value="room1">Room 1</option>
+        <option value="room2">Room 2</option>
+        <option value="living_room">Living Room</option>
+        <option value="WC">WC</option>
+      </select>
+
+      <label>Temperature (°C):</label>
+      <input type="range" min="5" max="30" value="22" id="tempValue" />
+      <span id="tempDisplay">22°</span>
+
+      <button onclick="sendTemperature()">OK</button>
+      <button onclick="closeModal('temperature')">Close</button>
+    </div>
+  </div>
+
+  <!-- TV Modal -->
+  <div id="tvModal" class="modal">
+    <div class="modal-content">
+      <h2>TV Settings</h2>
+      <label>State:</label>
+      <select id="tvState">
+        <option value="turn on">Turn On</option>
+        <option value="turn off">Turn Off</option>
+      </select>
+
+      <label>Channel:</label>
+      <input type="number" id="tvChannel" min="1" max="999" />
+
+      <button onclick="sendTV()">OK</button>
+      <button onclick="closeModal('tv')">Close</button>
+    </div>
+  </div>
+    <script type="module" src="/static/js/recorder.js"></script>
+    <script>
+    function sendData() {
+      const command = document.getElementById("command").value;
+      fetch("/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: command })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("result").innerText = data.message;
+      });
+    }
+
+    let recorder;
+let audioStream;
+
+function startRecording() {
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    audioStream = stream;
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const input = audioContext.createMediaStreamSource(stream);
+    recorder = new Recorder(input, { numChannels: 1 });
+    recorder.record();
+    console.log("Recording started...");
+  }).catch(err => {
+    console.error("Microphone error:", err);
+    alert("Cannot access microphone. Make sure permission is granted.");
+  });
+}
+
+function stopRecording() {
+  if (!recorder) return;
+  recorder.stop();
+
+  // Stop the audio stream
+  audioStream.getAudioTracks()[0].stop();
+
+  recorder.exportWAV(blob => {
+    const formData = new FormData();
+    formData.append('voice', blob, 'audio.wav');
+
+    fetch('/process_audio', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('result').innerText = data.reply;
+
+      // Play the server-generated audio response
+      fetch("/get-audio")
+        .then(res => res.json())
+        .then(data => {
+          const audioPlayer = document.getElementById("audioPlayer");
+          audioPlayer.src = data.audio_url;
+          audioPlayer.play().catch(err => console.warn("Playback error:", err));
+        });
+    });
+  });
+
+  console.log("Recording stopped and sent.");
+}
+
+    function sendSimpleCommand(command) {
+      fetch("/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("result").innerText = data.message;
+      });
+    }
+
+    function openModal(type) {
+      document.getElementById(type + 'Modal').style.display = 'flex';
+    }
+
+    function closeModal(type) {
+      document.getElementById(type + 'Modal').style.display = 'none';
+    }
+
+    document.getElementById("lightBrightness").addEventListener("input", function () {
+      document.getElementById("lightBrightnessValue").innerText = this.value + "%";
+    });
+
+    document.getElementById("tempValue").addEventListener("input", function () {
+      document.getElementById("tempDisplay").innerText = this.value + "°";
+    });
+
+    function sendLights() {
+      let cmd = `${document.getElementById("lightState").value} ${document.getElementById("lightRoom").value} lights`;
+
+      if (document.getElementById("lightState").value === "turn on") {
+        cmd += ` and set brightness to ${document.getElementById("lightBrightness").value} in ${document.getElementById("lightRoom").value}`;
+        const color = document.getElementById("lightColor").value;
+        if (color) cmd += ` and set the color of the lights to in ${document.getElementById("lightRoom").value} to ${color}`;
+      }
+
+      sendCommand(cmd);
+      closeModal("lights");
+    }
+
+    function sendTemperature() {
+      const room = document.getElementById("tempRoom").value;
+      const temp = document.getElementById("tempValue").value;
+      const cmd = `set the temperature to ${temp} degrees in the ${room}`;
+
+      sendCommand(cmd);
+      closeModal("temperature");
+    }
+
+    function sendTV() {
+      let cmd = `${document.getElementById("tvState").value} TV in living_room`;
+      const channel = document.getElementById("tvChannel").value;
+      if (document.getElementById("tvState").value === "turn on" && channel)
+        cmd += ` and change the TV channel to ${channel}`;
+
+      sendCommand(cmd);
+      closeModal("tv");
+    }
+
+    function sendCommand(command) {
+      fetch("/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("result").innerText = data.message;
+      });
+    }
+  </script>
+</body>
+</html>

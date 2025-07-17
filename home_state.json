@@ -6,7 +6,7 @@
             "brightness": 70
         },
         "living_room": {
-            "on": false,
+            "on": true,
             "color": "blue",
             "brightness": 100
         },
@@ -33,8 +33,8 @@
     },
     "temperature": {
         "kitchen": {
-            "on": false,
-            "value": 24
+            "on": true,
+            "value": 16
         },
         "living_room": {
             "on": true,

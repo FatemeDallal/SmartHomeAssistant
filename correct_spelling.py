@@ -7,6 +7,8 @@ model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
 
 def correct_spelling_and_grammar(text):
+    if not text:
+        return ""
     inputs = tokenizer(text, return_tensors="pt", max_length=128, truncation=True)
     with torch.no_grad():
         outputs = model.generate(**inputs, max_length=128, num_beams=5, early_stopping=True)

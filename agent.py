@@ -6,7 +6,6 @@ import json
 import os
 
 from correct_spelling import correct_spelling_and_grammar
-from speak_to_text import record_and_transcribe_long
 from text_to_speak import text_to_speech
 
 KEYWORDS_PATH = os.path.join(os.path.dirname(__file__), "keywords.json")
@@ -51,7 +50,7 @@ def parse_command(correct_input):
     commands = re.split(r"\s+و\s+| and ", correct_input)
     instructions = list()
     for command in commands:
-        device, location, action, value = None, "living_room", None, None
+        device, location, action, value = None, None, None, None
         command = command.lower()
         mapped = map_keywords(command)
         number, unit = extract_number_and_unit(command)
@@ -177,15 +176,12 @@ def smart_home_agent(user_input):
 
 if __name__ == '__main__':
     while True:
-        choice = input("Enter Type Input (1.Text or 2.Voice)")
-        if choice == "1":
-            query = input("Enter command: ")
-            response = smart_home_agent(query)
-            print(response)
-        elif choice == "2":
-            query = record_and_transcribe_long()
-            response = smart_home_agent(query)
-            text_to_speech()
+
+
+        query = input("Enter command: ")
+        response = smart_home_agent(query)
+        print(response)
+
 
 
 
