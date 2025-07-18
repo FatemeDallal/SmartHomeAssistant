@@ -1,6 +1,5 @@
 import speech_recognition as sr
 
-
 def speak_to_text(audio_file):
     recognizer = sr.Recognizer()
     with sr.AudioFile(audio_file) as source:
