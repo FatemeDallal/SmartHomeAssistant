@@ -9,8 +9,6 @@ def text_to_speech(text):
     voices = engine.getProperty('voices')
     engine.setProperty('voice', voices[1].id)
 
-    #engine.say(text)
-    #کد جدید
     engine.save_to_file(text, r"static\audio\response.wav")
 
     engine.runAndWait()

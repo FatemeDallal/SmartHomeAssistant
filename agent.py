@@ -177,7 +177,6 @@ def smart_home_agent(user_input):
 if __name__ == '__main__':
     while True:
 
-
         query = input("Enter command: ")
         response = smart_home_agent(query)
         print(response)

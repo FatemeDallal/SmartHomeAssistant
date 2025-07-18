@@ -5,9 +5,11 @@ from text_to_speak import text_to_speech
 import os
 app = Flask(__name__)
 
+
 @app.route('/')
 def index():
     return open("templates/ui.html").read()
+
 
 @app.route('/process', methods=['POST'])
 def process():
@@ -16,6 +18,7 @@ def process():
     print(command)
     result = smart_home_agent(command)
     return jsonify({"message": result})
+
 
 @app.route('/process_audio', methods=['POST'])
 def process_audio():
@@ -42,6 +45,8 @@ def process_audio():
     except Exception as e:
         print("Error in process_audio:", e)
         return jsonify({'reply': 'Internal server error during audio processing.'}), 500
+
+
 @app.route('/get-audio')
 def get_audio():
     audio_url = url_for('static', filename='audio/response.wav')
